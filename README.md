@@ -1,59 +1,116 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# VaksinSehat
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+VaksinSehat adalah aplikasi pendaftaran vaksinasi yang mengelola perjalanan peserta dari pembuatan akun, pemilihan jadwal, verifikasi, hingga pembayaran. Admin mengelola persetujuan peserta, pendaftaran, pembayaran, dan pengumuman.
 
-## About Laravel
+## Fitur dan kegunaannya
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Informasi publik
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Halaman utama `/` menyediakan akses masuk untuk admin dan peserta serta pendaftaran akun peserta.
+- Halaman `/jadwal` dapat dibuka tanpa login. Pengunjung dapat melihat tanggal, jam, kuota, dan sisa kuota vaksinasi, tetapi tidak dapat mendaftar dari halaman ini.
+- Kuota dihitung dari pendaftaran yang masih berstatus `pending` atau `diterima`. Pendaftaran yang ditolak atau kedaluwarsa tidak lagi menggunakan kuota.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Akun dan akses
 
-## Learning Laravel
+- Peserta membuat akun dengan nama, email, kata sandi, NIK, nomor telepon, dan alamat.
+- Akun peserta baru berstatus menunggu verifikasi. Admin menerima atau menolak akun sebelum peserta dapat menggunakan fitur pendaftaran.
+- Admin dan peserta masuk melalui `/login/admin` dan `/login/peserta`. Pemeriksaan peran melindungi halaman masing-masing.
+- Akun yang belum disetujui diarahkan ke halaman status akun. Peserta yang belum login atau belum disetujui tidak dapat menggunakan fitur pendaftaran dan pembayaran.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Pendaftaran jadwal
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Peserta yang akunnya telah disetujui memilih jadwal yang masih memiliki kuota.
+- Jadwal lampau, kuota penuh, dan pendaftaran ganda ditolak oleh server.
+- Pendaftaran baru berstatus `pending`. Pendaftaran tersebut menggunakan kuota sambil menunggu keputusan admin.
+- Admin dapat melihat data peserta dan jadwal, kemudian menerima atau menolak pendaftaran. Keputusan dan identitas verifikator disimpan.
 
-## Laravel Sponsors
+### Pembayaran
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- Form pembayaran tersedia setelah pendaftaran jadwal diterima admin.
+- Biaya ditetapkan server melalui `VAKSINASI_BIAYA` (nilai proyek saat ini Rp500.000); peserta tidak menentukan nominal sendiri.
+- Peserta mengunggah bukti pembayaran berformat JPG, JPEG, PNG, atau PDF dengan ukuran maksimum 5 MB. Bukti disimpan pada penyimpanan privat dan hanya admin berwenang yang dapat mengunduhnya.
+- Admin menerima atau menolak bukti pembayaran. Peserta dapat melihat status dan alasan penolakan.
+- Jika bukti ditolak, peserta memiliki waktu satu jam sejak penolakan admin untuk mengunggah ulang. Batas waktu ditampilkan menurut zona waktu perangkat, sementara perhitungan tenggat dilakukan server.
+- Jika tidak ada unggahan ulang sebelum batas waktu, pendaftaran lama menjadi `kedaluwarsa`. Riwayat dan bukti yang ditolak tetap tersimpan, kuota dilepaskan, dan peserta harus membuat pendaftaran baru. Peserta dapat memilih jadwal yang sama kembali bila kuotanya masih tersedia.
 
-### Premium Partners
+### Pengumuman dan dashboard
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- Admin dapat membuat, mengubah, dan menghapus pengumuman.
+- Peserta dapat melihat daftar pengumuman yang diterbitkan.
+- Dashboard admin dan peserta menampilkan ringkasan pengumuman terbaru agar informasi penting mudah ditemukan.
 
-## Contributing
+## Alur kerja aplikasi
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+1. **Pengunjung melihat jadwal** — pengunjung dapat memeriksa kuota tanpa akun, tetapi tidak dapat melakukan pendaftaran.
+2. **Peserta mendaftar akun** — akun baru dibuat dengan status menunggu verifikasi.
+3. **Admin memverifikasi akun** — admin menerima atau menolak akun. Peserta yang diterima dapat masuk ke fitur peserta.
+4. **Peserta memilih jadwal** — sistem memeriksa tanggal, kuota, dan pendaftaran ganda, lalu menyimpan pendaftaran berstatus menunggu.
+5. **Admin memverifikasi pendaftaran** — admin menerima atau menolak pilihan jadwal dan sistem mencatat keputusan serta verifikator.
+6. **Peserta mengirim pembayaran** — setelah pendaftaran diterima, peserta membayar sesuai biaya yang ditetapkan dan mengunggah bukti.
+7. **Admin memverifikasi pembayaran** — pembayaran diterima atau ditolak. Jika ditolak, peserta dapat mengunggah ulang dalam satu jam.
+8. **Sistem memulihkan kuota bila tenggat terlewati** — pendaftaran kedaluwarsa dan kuotanya tersedia kembali; peserta perlu mendaftar ulang.
+9. **Peserta membaca pengumuman** — peserta melihat informasi terbaru melalui halaman pengumuman atau ringkasan di dashboard.
 
-## Code of Conduct
+## Peran komponen aplikasi
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- `routes/web.php` mendefinisikan URL publik, autentikasi, peserta, dan admin.
+- `app/Http/Controllers/` menjalankan proses pendaftaran, pembayaran, verifikasi, dan pengumuman.
+- `app/Models/` mewakili data akun, profil, jadwal, pendaftaran, pembayaran, serta relasinya.
+- Middleware `role` dan `akun.diterima` membatasi fitur berdasarkan peran dan status akun.
+- `database/migrations/` membangun struktur tabel dan indeks. Riwayat pendaftaran lama disimpan agar peserta dapat mendaftar kembali tanpa menghapus catatan sebelumnya.
+- `config/vaksinasi.php` membaca nominal biaya dari `VAKSINASI_BIAYA`.
+- `app/Console/Commands/ExpireRejectedPaymentRegistrations.php` mengubah pendaftaran yang melewati tenggat menjadi kedaluwarsa. Pengecekan juga dilakukan saat halaman jadwal atau pembayaran dibuka maupun saat peserta mencoba mengunggah ulang.
 
-## Security Vulnerabilities
+## Menjalankan aplikasi
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+1. Pasang dependensi PHP dan JavaScript:
 
-## License
+   ```sh
+   composer install
+   npm install
+   ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+2. Siapkan `.env` dari `.env.example`, buat kunci aplikasi, dan atur koneksi database yang digunakan:
+
+   ```sh
+   php artisan key:generate
+   ```
+
+   Pastikan biaya tersedia di `.env`:
+
+   ```dotenv
+   VAKSINASI_BIAYA=500000
+   ```
+
+3. Jalankan migrasi dan seeder:
+
+   ```sh
+   php artisan migrate --seed
+   ```
+
+   Seeder menambahkan akun admin awal dan contoh jadwal vaksinasi. Sesuaikan data jadwal jika tanggal contoh sudah lewat.
+
+4. Bangun aset frontend dan jalankan aplikasi:
+
+   ```sh
+   npm run build
+   composer run dev
+   ```
+
+5. Agar pendaftaran kedaluwarsa diproses otomatis setiap menit saat aplikasi tidak sedang diakses, jalankan scheduler di terminal terpisah pada lingkungan development:
+
+   ```sh
+   php artisan schedule:work
+   ```
+
+   Pada production, daftarkan Laravel Scheduler melalui cron atau penjadwal tugas sistem operasi.
+
+## Pengujian
+
+Jalankan pengujian otomatis dengan:
+
+```sh
+php artisan test --compact
+```
+
+Pengujian fitur mencakup autentikasi dan verifikasi akun, kuota dan pendaftaran ganda, verifikasi pendaftaran, unggah serta verifikasi pembayaran, tenggat unggah ulang, pemulihan kuota, pengumuman, dan pembatasan akses.
