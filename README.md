@@ -2,6 +2,34 @@
 
 VaksinSehat adalah aplikasi pendaftaran vaksinasi yang mengelola perjalanan peserta dari pembuatan akun, pemilihan jadwal, verifikasi, hingga pembayaran. Admin mengelola persetujuan peserta, pendaftaran, pembayaran, dan pengumuman.
 
+## Spesifikasi dan dependensi
+
+### Persyaratan sistem
+
+| Komponen | Persyaratan |
+| --- | --- |
+| PHP | 8.2 atau lebih baru |
+| Composer | Composer 2.x |
+| Node.js | `^20.19.0` atau `>=22.12.0` (persyaratan Vite 7) |
+| npm | npm yang disertakan dengan Node.js |
+| Database | SQLite (konfigurasi awal) atau MySQL dengan driver PDO yang sesuai |
+| Browser | Versi terbaru Chrome, Firefox, Edge, atau Safari |
+
+Versi yang telah diverifikasi pada lingkungan pengembangan: PHP 8.2.12, Laravel Framework 12.74.0, Node.js 24.15.0, npm 11.12.1, Vite 7.3.8, Tailwind CSS 4.3.5, dan Pest 3.8.7. Rentang versi dan dependensi proyek didefinisikan di `composer.json`, `composer.lock`, `package.json`, dan `package-lock.json`.
+
+### Dependensi utama
+
+- **Backend:** Laravel Framework `^12.0`, PHP `^8.2`, dan Laravel Tinker `^2.10.1`.
+- **Frontend/build:** Vite `^7.0.7`, Laravel Vite Plugin `^2.0.0`, Tailwind CSS `^4.0.0`, `@tailwindcss/vite` `^4.0.0`, Axios `^1.11.0`, dan Concurrently `^9.0.1`.
+- **Pengembangan dan pengujian:** Pest `^3.8`, Pest Laravel Plugin `^3.2`, Laravel Pint `^1.24`, Faker `^1.23`, Mockery `^1.6`, Laravel Boost, Sail, Pail, dan Collision.
+- **Integrasi opsional:** Gemini API dengan Google Search grounding untuk pencarian berita kesehatan harian. Aplikasi menggunakan HTTP client bawaan Laravel; tidak memerlukan SDK Gemini tambahan.
+
+## Diagram kasus penggunaan
+
+Diagram berikut menunjukkan interaksi peserta dan admin pada sistem pendaftaran vaksinasi.
+
+![Diagram kasus penggunaan sistem pendaftaran vaksinasi](public/images/diagram-kasus-penggunaan-pendaftaran-vaksinasi.png)
+
 ## Fitur dan kegunaannya
 
 ### Informasi publik
@@ -45,7 +73,7 @@ VaksinSehat adalah aplikasi pendaftaran vaksinasi yang mengelola perjalanan pese
 - Peserta dapat melihat daftar pengumuman yang diterbitkan.
 - Dashboard admin dan peserta menampilkan ringkasan pengumuman terbaru agar informasi penting mudah ditemukan.
 - Berita di dashboard peserta dapat digeser dengan kontrol sebelumnya/berikutnya atau scroll horizontal.
-- Dashboard peserta menampilkan berita imunisasi bersumber dengan tanggal dan tautan. Berita baru dicari setiap hari menggunakan Gemini dan Google Search grounding, hanya disimpan bila topiknya relevan serta URL-nya terverifikasi; konten tetap bersifat edukatif, bukan diagnosis.
+- Beranda publik dan dashboard peserta menampilkan carousel berita imunisasi bersumber dengan tanggal dan tautan. Berita baru dicari setiap hari menggunakan Gemini dan Google Search grounding, hanya disimpan bila topiknya relevan serta URL-nya terverifikasi; konten tetap bersifat edukatif, bukan diagnosis.
 - Sapaan dashboard admin dan peserta menyesuaikan waktu lokal perangkat dan menampilkan tanggal hari ini.
 
 ## Alur kerja aplikasi
@@ -68,55 +96,83 @@ VaksinSehat adalah aplikasi pendaftaran vaksinasi yang mengelola perjalanan pese
 - Middleware `role` dan `akun.diterima` membatasi fitur berdasarkan peran dan status akun.
 - `database/migrations/` membangun struktur tabel dan indeks. Riwayat pendaftaran lama disimpan agar peserta dapat mendaftar kembali tanpa menghapus catatan sebelumnya.
 - `config/vaksinasi.php` membaca nominal biaya dari `VAKSINASI_BIAYA`.
+- `app/Models/BeritaKesehatan.php` dan tabel `berita_kesehatan` menyimpan berita harian terverifikasi beserta atribusi Google Search.
+- `app/Console/Commands/FetchDailyHealthNews.php` mencari maksimal satu berita vaksinasi/imunisasi per hari menggunakan Gemini; berita hanya ditampilkan setelah validasi topik, tanggal, dan sumber.
 - `app/Console/Commands/ExpireRejectedPaymentRegistrations.php` mengubah pendaftaran yang melewati tenggat menjadi kedaluwarsa. Pengecekan juga dilakukan saat halaman jadwal atau pembayaran dibuka maupun saat peserta mencoba mengunggah ulang.
 - `app/Console/Commands/GenerateDailyVaksinasiSchedule.php` menambahkan satu slot jadwal untuk tanggal hari ini bila belum tersedia.
 
-## Menjalankan aplikasi
+## Instalasi dan konfigurasi
 
-1. Pasang dependensi PHP dan JavaScript:
+1. Pastikan PHP, Composer, Node.js, npm, dan database yang dipilih sudah terpasang. Clone repository dari GitHub, lalu buka direktori proyek.
+
+2. Pasang dependensi. `npm ci` menggunakan lockfile agar versi paket frontend konsisten:
 
    ```sh
    composer install
-   npm install
+   npm ci
    ```
 
-2. Siapkan `.env` dari `.env.example`, buat kunci aplikasi, dan atur koneksi database yang digunakan:
+3. Buat file konfigurasi lokal dari `.env.example`:
+
+   ```sh
+   cp .env.example .env
+   ```
+
+   Pada Windows PowerShell, gunakan:
+
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+4. Buat kunci aplikasi:
 
    ```sh
    php artisan key:generate
    ```
 
-   Pastikan biaya tersedia di `.env`:
+5. Atur koneksi database dan biaya di `.env`. Konfigurasi awal menggunakan SQLite dan file database `database/database.sqlite`; jika memilih MySQL, sesuaikan `DB_CONNECTION`, host, nama database, username, dan password.
 
    ```dotenv
+   DB_CONNECTION=sqlite
    VAKSINASI_BIAYA=500000
    ```
 
-3. Jalankan migrasi dan seeder:
+6. Jalankan migrasi dan seeder:
 
    ```sh
    php artisan migrate --seed
    ```
 
-   Seeder menambahkan akun admin awal, contoh jadwal vaksinasi, dan berita edukasi awal.
+   Seeder menambahkan akun admin awal, contoh jadwal vaksinasi, dan berita edukasi awal. Akun admin seeder ditujukan untuk pengembangan lokal; perbarui kredensialnya sebelum deployment.
 
-4. Bangun aset frontend dan jalankan aplikasi:
+7. Bangun aset frontend dan jalankan aplikasi:
 
    ```sh
    npm run build
    composer run dev
    ```
 
-   `composer run dev` menjalankan web server, Vite, worker antrean, dan Laravel Scheduler. Scheduler memproses pendaftaran kedaluwarsa setiap menit, membuat jadwal pukul 00.05 WIB, serta mencari berita kesehatan pukul 08.00 WIB. Pada production, daftarkan Laravel Scheduler melalui cron atau penjadwal tugas sistem operasi.
+   `composer run dev` menjalankan web server, Vite, worker antrean, dan Laravel Scheduler. Scheduler memproses pendaftaran kedaluwarsa setiap menit, membuat jadwal pukul 00.05 WIB, serta mencari berita kesehatan pukul 08.00 WIB.
 
-5. Untuk pencarian berita otomatis, isi `GEMINI_API_KEY` di `.env` dengan API key dari Google AI Studio. `GEMINI_MODEL` secara default memakai `gemini-3.8-flash`. Jalankan `php artisan berita:ambil-harian` untuk mencoba secara manual; perintah menyimpan paling banyak satu berita per tanggal WIB, hanya bila ada berita baru yang relevan dan URL-nya terverifikasi melalui Google Search grounding. Komponen Search Suggestions dari Google turut ditampilkan sesuai ketentuan grounding. Penggunaan API dapat dikenai kuota atau biaya sesuai akun Google.
+### Konfigurasi berita otomatis (opsional)
+
+Untuk mengaktifkan pencarian berita, buat API key Gemini melalui Google AI Studio lalu isi variabel berikut di `.env`:
+
+```dotenv
+GEMINI_API_KEY=isi_api_key_lokal
+GEMINI_MODEL=gemini-3.8-flash
+```
+
+Jalankan pencarian secara manual dengan `php artisan berita:ambil-harian`. Scheduler menjalankannya setiap hari pukul 08.00 WIB. Perintah menyimpan maksimal satu berita per tanggal Jakarta, hanya jika ada berita baru yang relevan dan URL sumber terverifikasi melalui Google Search grounding. Saran Penelusuran Google juga ditampilkan mengikuti ketentuan grounding. Penggunaan API tunduk pada kuota dan kemungkinan biaya dari Google. Jangan commit API key atau file `.env` ke repository.
+
+Untuk production, jalankan Laravel Scheduler melalui cron atau penjadwal tugas sistem operasi sesuai panduan resmi Laravel.
 
 ## Pengujian
 
-Jalankan pengujian otomatis dengan:
+Jalankan seluruh pengujian otomatis dengan:
 
 ```sh
 php artisan test --compact
 ```
 
-Pengujian fitur mencakup autentikasi dan verifikasi akun, kuota dan pendaftaran ganda, verifikasi pendaftaran, unggah serta verifikasi pembayaran, tenggat unggah ulang, pemulihan kuota, pengumuman, dan pembatasan akses.
+Pengujian fitur mencakup autentikasi dan verifikasi akun, kuota dan pendaftaran ganda, verifikasi pendaftaran, unggah serta verifikasi pembayaran, tenggat unggah ulang, pemulihan kuota, berita harian, pengumuman, dan pembatasan akses.
