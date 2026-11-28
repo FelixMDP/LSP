@@ -3,10 +3,14 @@
 @section('title', 'Dashboard Admin')
 
 @section('content')
-    <section class="hero">
+    <section class="hero dashboard-hero dashboard-hero--admin">
         <div class="hero__content">
-            <span class="eyebrow">Selamat datang kembali</span>
-            <h1>Halo, {{ auth()->user()->name }}.</h1>
+            <div class="dashboard-hero__greeting">
+                <span class="dashboard-hero__greeting-mark" aria-hidden="true">✦</span>
+                <span data-dashboard-greeting>Selamat datang kembali</span>
+                <time data-dashboard-date></time>
+            </div>
+            <h1>Halo, <span class="dashboard-hero__name">{{ auth()->user()->name }}</span>.</h1>
             <p>Ringkasan kerja dan informasi penting untuk membantu Anda mengelola layanan vaksinasi.</p>
         </div>
     </section>

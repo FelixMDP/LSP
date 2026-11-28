@@ -62,6 +62,33 @@
                 </div>
                 <a class="button" href="{{ route('peserta.jadwal.index') }}">Daftar ulang dan pilih jadwal</a>
             @elseif ($item->status_pendaftaran === \App\Models\PendaftaranVaksinasi::STATUS_DITERIMA)
+                <section class="transfer-card" aria-label="Informasi rekening simulasi">
+                    <div class="transfer-card__heading">
+                        <span class="eyebrow">Pembayaran simulasi</span>
+                        <span class="badge">Rekening demo</span>
+                    </div>
+                    <p class="muted">Gunakan informasi ini sebagai panduan simulasi unggah bukti pembayaran.</p>
+                    <dl class="transfer-details">
+                        <div>
+                            <dt>Bank</dt>
+                            <dd>{{ $rekeningDemo['bank'] }}</dd>
+                        </div>
+                        <div>
+                            <dt>Nomor rekening</dt>
+                            <dd class="transfer-details__number">{{ $rekeningDemo['nomor'] }}</dd>
+                        </div>
+                        <div>
+                            <dt>Atas nama</dt>
+                            <dd>{{ $rekeningDemo['atas_nama'] }}</dd>
+                        </div>
+                        <div>
+                            <dt>Nominal</dt>
+                            <dd>Rp {{ is_int($biaya) ? number_format($biaya, 0, ',', '.') : '-' }}</dd>
+                        </div>
+                    </dl>
+                    <p class="transfer-card__notice">Ini rekening fiktif untuk demonstrasi. Jangan melakukan transfer uang sungguhan.</p>
+                </section>
+
                 @if (!$item->pembayaran || $item->pembayaran->status_pembayaran === \App\Models\Pembayaran::STATUS_DITOLAK)
                     @if (is_int($biaya) && $biaya > 0)
                         <form class="upload-form" action="{{ route('peserta.pembayaran.store', $item) }}" method="POST" enctype="multipart/form-data">

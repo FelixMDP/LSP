@@ -43,6 +43,9 @@ test('peserta melihat nominal pembayaran yang dikonfigurasi dan statusnya', func
         ->get(route('peserta.pembayaran.index'))
         ->assertOk()
         ->assertSee('500.000')
+        ->assertSee('Bank Simulasi')
+        ->assertSee('8241 6037 9152 4086')
+        ->assertSee('Jangan melakukan transfer uang sungguhan')
         ->assertSee('belum dikirim');
 });
 
@@ -65,6 +68,18 @@ test('peserta dapat mengunggah bukti dan nominal berasal dari konfigurasi server
         ->and($pembayaran->status_pembayaran)->toBe(Pembayaran::STATUS_PENDING);
 
     Storage::disk('local')->assertExists($pembayaran->bukti_pembayaran);
+});
+
+test('rekening simulasi tidak ditampilkan sebelum pendaftaran diterima', function () {
+    $this->pendaftaran->update([
+        'status_pendaftaran' => PendaftaranVaksinasi::STATUS_PENDING,
+    ]);
+
+    $this->actingAs($this->peserta)
+        ->get(route('peserta.pembayaran.index'))
+        ->assertOk()
+        ->assertDontSee('8241 6037 9152 4086')
+        ->assertDontSee('Bank Simulasi');
 });
 
 test('peserta belum dapat membayar sebelum pendaftaran diterima', function () {

@@ -112,13 +112,14 @@ test('peserta dengan akun diterima dapat login ke dashboard', function () {
     ]);
 
     $this->get(route('login.peserta'))
-        ->assertOk()
-        ->assertSee('Masuk sebagai peserta')
-        ->assertSee('class="back-link" href="'.route('home').'"', false)
-        ->assertDontSee('data-history-back');
+        ->assertRedirect(route('login.form'));
 
     $this->get(route('login.form'))
         ->assertOk()
+        ->assertSee('Masuk ke akun')
+        ->assertSee('Masuk sebagai')
+        ->assertSee('Admin')
+        ->assertSee('Peserta')
         ->assertSee('data-history-back');
 
     $this->post(route('login'), [
@@ -139,13 +140,13 @@ test('login sebagai peserta menolak kredensial admin', function () {
         'status_akun' => 'diterima',
     ]);
 
-    $this->from(route('login.peserta'))
+    $this->from(route('login.form'))
         ->post(route('login'), [
             'email' => $admin->email,
             'password' => 'password',
             'login_as' => 'peserta',
         ])
-        ->assertRedirect(route('login.peserta'))
+        ->assertRedirect(route('login.form'))
         ->assertSessionHasErrors('email');
 
     $this->assertGuest();
@@ -160,10 +161,13 @@ test('login admin pada portal admin diarahkan ke dashboard admin', function () {
     ]);
 
     $this->get(route('login.admin'))
+        ->assertRedirect(route('login.form'));
+
+    $this->get(route('login.form'))
         ->assertOk()
-        ->assertSee('Masuk sebagai admin')
-        ->assertSee('class="back-link" href="'.route('home').'"', false)
-        ->assertDontSee('data-history-back');
+        ->assertSee('Masuk sebagai')
+        ->assertSee('Admin')
+        ->assertSee('Peserta');
 
     $this->post(route('login'), [
         'email' => $admin->email,
@@ -205,7 +209,7 @@ test('peserta yang login dapat logout', function () {
 
     $this->get(route('home'))
         ->assertOk()
-        ->assertSee('Masuk peserta')
+        ->assertSee('Masuk')
         ->assertDontSee('Keluar');
 });
 

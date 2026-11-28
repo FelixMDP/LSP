@@ -86,6 +86,12 @@ test('halaman awal menyediakan tautan untuk melihat jadwal publik', function () 
         ->assertOk()
         ->assertSee(route('jadwal.publik'))
         ->assertSee('Lihat jadwal vaksinasi')
+        ->assertSee(route('login.form'))
+        ->assertSee('Masuk')
+        ->assertDontSee('Masuk sebagai admin')
+        ->assertDontSee('Masuk sebagai peserta')
+        ->assertDontSee('href="'.route('login.admin').'"', false)
+        ->assertDontSee('href="'.route('login.peserta').'"', false)
         ->assertDontSee('data-history-back')
         ->assertDontSee('Kembali');
 });

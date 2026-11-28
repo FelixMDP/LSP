@@ -70,7 +70,7 @@
         </form>
 
         <p class="muted" style="margin-top: 20px;">
-            Sudah punya akun? <a href="{{ route('login.peserta') }}">Masuk sebagai peserta</a>
+            Sudah punya akun? <a href="{{ route('login.form') }}">Masuk</a>
         </p>
     </section>
 @endsection

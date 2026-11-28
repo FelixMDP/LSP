@@ -14,7 +14,22 @@
             <span>Vaksin<span class="brand-accent">Sehat</span></span>
         </a>
 
-        <nav class="site-nav" aria-label="Navigasi utama">
+        <button
+            class="site-nav-toggle"
+            type="button"
+            aria-label="Buka navigasi utama"
+            aria-expanded="false"
+            aria-controls="site-navigation"
+            data-nav-toggle
+        >
+            <span class="site-nav-toggle__dots" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+            </span>
+        </button>
+
+        <nav class="site-nav" id="site-navigation" aria-label="Navigasi utama">
             @auth
                 @if (auth()->user()->role === 'admin')
                     <a href="{{ route('admin.dashboard') }}">Dashboard</a>
@@ -36,16 +51,15 @@
                 </form>
             @else
                 <a href="{{ route('jadwal.publik') }}">Jadwal vaksinasi</a>
-                <a href="{{ route('login.admin') }}">Masuk admin</a>
-                <a href="{{ route('login.peserta') }}">Masuk peserta</a>
+                <a href="{{ route('login.form') }}">Masuk</a>
                 <a class="button button--small" href="{{ route('register.form') }}">Buat akun</a>
             @endauth
         </nav>
     </header>
 
     <main class="page-shell">
-        @if (!request()->routeIs('home'))
-            <a class="back-link" href="{{ route('home') }}" @unless(request()->routeIs('login.admin', 'login.peserta')) data-history-back @endunless>
+        @if (!request()->routeIs('home', 'admin.dashboard', 'peserta.dashboard'))
+            <a class="back-link" href="{{ route('home') }}" data-history-back>
                 <span aria-hidden="true">←</span>
                 <span>Kembali</span>
             </a>

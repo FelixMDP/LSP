@@ -3,10 +3,14 @@
 @section('title', 'Dashboard Peserta')
 
 @section('content')
-    <section class="hero">
+    <section class="hero dashboard-hero dashboard-hero--peserta">
         <div class="hero__content">
-            <span class="eyebrow">Senang bertemu Anda kembali</span>
-            <h1>Halo, {{ Auth::user()->name }}.</h1>
+            <div class="dashboard-hero__greeting">
+                <span class="dashboard-hero__greeting-mark" aria-hidden="true">✦</span>
+                <span data-dashboard-greeting>Senang bertemu Anda kembali</span>
+                <time data-dashboard-date></time>
+            </div>
+            <h1>Halo, <span class="dashboard-hero__name">{{ Auth::user()->name }}</span>.</h1>
             <p>Semua informasi dan langkah vaksinasi Anda ada di satu tempat.</p>
             <span class="badge">Akun {{ Auth::user()->status_akun }}</span>
         </div>
@@ -31,18 +35,32 @@
                 </div>
             </div>
         @else
-            <div class="announcement-grid">
-                @foreach ($pengumuman as $item)
-                    <article class="announcement-preview">
-                        <span class="announcement-date">{{ $item->created_at->format('d M Y') }}</span>
-                        <h3>{{ $item->judul }}</h3>
-                        <p>{{ \Illuminate\Support\Str::limit($item->isi, 150) }}</p>
-                        <span class="announcement-author">Dari {{ $item->admin?->name ?? 'Tim vaksinasi' }}</span>
-                    </article>
-                @endforeach
+            <div class="announcement-carousel" data-slide-carousel>
+                <div class="announcement-carousel__track" data-slide-track id="announcement-track">
+                    @foreach ($pengumuman as $item)
+                        <article class="announcement-preview" data-announcement-slide>
+                            <span class="announcement-date">{{ $item->created_at->format('d M Y') }}</span>
+                            <h3>{{ $item->judul }}</h3>
+                            <p>{{ \Illuminate\Support\Str::limit($item->isi, 180) }}</p>
+                            <span class="announcement-author">Dari {{ $item->admin?->name ?? 'Tim vaksinasi' }}</span>
+                        </article>
+                    @endforeach
+                </div>
+                @if ($pengumuman->count() > 1)
+                    <div class="announcement-carousel__controls" aria-label="Navigasi pengumuman">
+                        <button class="carousel-button" type="button" data-slide-prev aria-label="Pengumuman sebelumnya" aria-controls="announcement-track">
+                            <span aria-hidden="true">←</span>
+                        </button>
+                        <button class="carousel-button" type="button" data-slide-next aria-label="Pengumuman berikutnya" aria-controls="announcement-track">
+                            <span aria-hidden="true">→</span>
+                        </button>
+                    </div>
+                @endif
             </div>
         @endif
     </section>
+
+    @include('partials.health-news-carousel', ['beritaKesehatan' => $beritaKesehatan])
 
     <div class="section-heading">
         <div>

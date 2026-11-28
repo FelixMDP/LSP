@@ -9,3 +9,12 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('vaksinasi:expire-rejected-payment-registrations')->everyMinute();
+Schedule::command('vaksinasi:generate-daily-schedule')
+    ->dailyAt('00:05')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();
+
+Schedule::command('berita:ambil-harian')
+    ->dailyAt('08:00')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();

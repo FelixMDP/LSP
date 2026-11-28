@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminSeeder::class,
             JadwalVaksinasiSeeder::class,
+            BeritaKesehatanSeeder::class,
         ]);
     }
 }

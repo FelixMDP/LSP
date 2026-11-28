@@ -28,6 +28,7 @@ class PembayaranController extends Controller
         return view('peserta.pembayaran.index', [
             'pendaftaran' => $pendaftaran,
             'biaya' => config('vaksinasi.biaya'),
+            'rekeningDemo' => config('vaksinasi.rekening_demo'),
         ]);
     }
 

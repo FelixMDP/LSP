@@ -66,7 +66,7 @@
         </div>
         <div class="actions">
             @guest
-                <a class="button" href="{{ route('login.peserta') }}">Masuk sebagai peserta</a>
+                <a class="button" href="{{ route('login.form') }}">Masuk</a>
                 <a class="button button--outline" href="{{ route('register.form') }}">Buat akun</a>
             @elseif (auth()->user()->role === 'peserta' && auth()->user()->status_akun === 'diterima')
                 <a class="button" href="{{ route('peserta.jadwal.index') }}">Pilih jadwal</a>

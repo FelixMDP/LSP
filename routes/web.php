@@ -10,14 +10,36 @@ use App\Http\Controllers\JadwalPublikController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\PendaftaranVaksinasiController;
 use App\Http\Controllers\PengumumanPesertaController;
+use App\Models\BeritaKesehatan;
 use App\Models\Pengumuman;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Route;
 
 // ======================================
 // HALAMAN UTAMA
 // ======================================
 
-Route::view('/', 'welcome')->name('home');
+Route::get('/', function () {
+    $pengumuman = Pengumuman::query()
+        ->with('admin:id,name')
+        ->latest()
+        ->limit(3)
+        ->get();
+    /** @var Collection<int, BeritaKesehatan> $beritaKesehatanRecords */
+    $beritaKesehatanRecords = BeritaKesehatan::query()
+        ->latest('published_on')
+        ->limit(6)
+        ->get();
+    $beritaKesehatanTersimpan = $beritaKesehatanRecords
+        ->map(fn (BeritaKesehatan $berita): array => $berita->toCardData())
+        ->all();
+
+    return view('welcome', [
+        'biaya' => config('vaksinasi.biaya'),
+        'pengumuman' => $pengumuman,
+        'beritaKesehatan' => $beritaKesehatanTersimpan ?: config('berita-kesehatan'),
+    ]);
+})->name('home');
 Route::get('/jadwal', [JadwalPublikController::class, 'index'])
     ->name('jadwal.publik');
 
@@ -26,11 +48,11 @@ Route::get('/jadwal', [JadwalPublikController::class, 'index'])
 // ======================================
 
 Route::get('/login/admin', function () {
-    return view('auth.login', ['loginRole' => 'admin']);
+    return redirect()->route('login.form');
 })->name('login.admin');
 
 Route::get('/login/peserta', function () {
-    return view('auth.login', ['loginRole' => 'peserta']);
+    return redirect()->route('login.form');
 })->name('login.peserta');
 
 // Menampilkan halaman login
@@ -68,8 +90,9 @@ Route::middleware(['auth', 'role:admin'])
         // Dashboard admin
         Route::get('/dashboard', function () {
             $pengumuman = Pengumuman::query()
+                ->with('admin:id,name')
                 ->latest()
-                ->limit(3)
+                ->limit(10)
                 ->get();
 
             return view('admin.dashboard', compact('pengumuman'));
@@ -156,8 +179,17 @@ Route::middleware(['auth', 'role:peserta'])
                 ->latest()
                 ->limit(3)
                 ->get();
+            /** @var Collection<int, BeritaKesehatan> $beritaKesehatanRecords */
+            $beritaKesehatanRecords = BeritaKesehatan::query()
+                ->latest('published_on')
+                ->limit(10)
+                ->get();
+            $beritaKesehatanTersimpan = $beritaKesehatanRecords
+                ->map(fn (BeritaKesehatan $berita): array => $berita->toCardData())
+                ->all();
+            $beritaKesehatan = $beritaKesehatanTersimpan ?: config('berita-kesehatan');
 
-            return view('peserta.dashboard', compact('pengumuman'));
+            return view('peserta.dashboard', compact('pengumuman', 'beritaKesehatan'));
         })
             ->middleware('akun.diterima')
             ->name('dashboard');
